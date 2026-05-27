@@ -14,6 +14,7 @@ DeployPilot is a build orchestration and versioned distribution platform for tea
 - Artifact publishing through local storage + HTTP.
 - Launcher-side update checks, progress, integrity validation and rollback.
 - Build recipes for .NET SDK, MSBuild, WinForms, FoxPro and custom commands.
+- Repository probing for solution/project detection and recipe suggestions.
 - English/Spanish localization from day one.
 
 ## Architecture
@@ -91,6 +92,19 @@ For a quick end-to-end demo, start the API, open the launcher, click `Seed demo 
 - VB.NET WinForms
 - FoxPro configurable command
 - Custom command
+
+## Repository Probing
+
+DeployPilot can inspect a repository folder and suggest build technologies from common desktop project files:
+
+```http
+POST /api/repositories/probe
+{
+  "repositoryPath": "C:/source/my-desktop-app"
+}
+```
+
+The probe currently detects `.sln`, `.csproj`, `.vbproj`, `.pjx` and `.prg` files while ignoring build output folders such as `bin`, `obj`, `.git` and `node_modules`.
 
 ## Roadmap
 

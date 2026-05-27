@@ -4,6 +4,7 @@ using DeployPilot.Shared;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDeployPilotPersistence(builder.Configuration);
+builder.Services.AddSingleton<RepositoryProbeService>();
 
 var app = builder.Build();
 
@@ -46,6 +47,12 @@ app.MapPost("/api/repositories", (CreateRepositoryRequest request, IDeployPilotS
         request.BuildCommand);
 
     return Results.Created($"/api/repositories/{repository.Id}", repository);
+});
+
+app.MapPost("/api/repositories/probe", (RepositoryProbeRequest request, RepositoryProbeService probeService) =>
+{
+    var result = probeService.Probe(request.RepositoryPath);
+    return Results.Ok(result);
 });
 
 app.MapGet("/api/applications", (IDeployPilotStore store) => Results.Ok(store.GetApplications()));

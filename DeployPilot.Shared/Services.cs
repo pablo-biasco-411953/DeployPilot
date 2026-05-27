@@ -204,6 +204,92 @@ public sealed class RecipeSelector
     }
 }
 
+public sealed class RepositoryProbeService
+{
+    private static readonly string[] SupportedPatterns =
+    [
+        "*.sln",
+        "*.csproj",
+        "*.vbproj",
+        "*.pjx",
+        "*.prg"
+    ];
+
+    public RepositoryProbeResult Probe(string repositoryPath)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryPath))
+        {
+            return new RepositoryProbeResult(repositoryPath, Exists: false, [], ["Repository path is required."]);
+        }
+
+        var fullPath = Path.GetFullPath(repositoryPath);
+        if (!Directory.Exists(fullPath))
+        {
+            return new RepositoryProbeResult(fullPath, Exists: false, [], ["Repository path does not exist."]);
+        }
+
+        var projects = SupportedPatterns
+            .SelectMany(pattern => Directory.EnumerateFiles(fullPath, pattern, SearchOption.AllDirectories))
+            .Where(path => !IsIgnoredPath(fullPath, path))
+            .Select(path => CreateDetectedProject(fullPath, path))
+            .OrderBy(project => project.Technology)
+            .ThenBy(project => project.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var warnings = new List<string>();
+        if (projects.Length == 0)
+        {
+            warnings.Add("No supported project files were detected.");
+        }
+
+        if (projects.Count(project => project.Technology == BuildTechnology.CustomCommand) > 0)
+        {
+            warnings.Add("Some projects need a custom build command before they can run unattended.");
+        }
+
+        return new RepositoryProbeResult(fullPath, Exists: true, projects, warnings);
+    }
+
+    private static bool IsIgnoredPath(string repositoryRoot, string path)
+    {
+        var relative = Path.GetRelativePath(repositoryRoot, path);
+        var segments = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return segments.Any(segment =>
+            segment.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("node_modules", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static DetectedProject CreateDetectedProject(string repositoryRoot, string path)
+    {
+        var extension = Path.GetExtension(path);
+        var relativePath = Path.GetRelativePath(repositoryRoot, path).Replace('\\', '/');
+        var technology = extension.ToLowerInvariant() switch
+        {
+            ".sln" => BuildTechnology.MsBuildClassic,
+            ".csproj" => BuildTechnology.CSharpWinForms,
+            ".vbproj" => BuildTechnology.VbNetWinForms,
+            ".pjx" => BuildTechnology.FoxPro,
+            ".prg" => BuildTechnology.FoxPro,
+            _ => BuildTechnology.CustomCommand
+        };
+
+        var command = technology switch
+        {
+            BuildTechnology.FoxPro => $"foxpro-build \"{relativePath}\"",
+            BuildTechnology.CustomCommand => "Set a custom command for this project.",
+            _ => null
+        };
+
+        return new DetectedProject(
+            Path.GetFileNameWithoutExtension(path),
+            relativePath,
+            technology,
+            command);
+    }
+}
+
 public sealed class SetupConfigurationValidator
 {
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)

@@ -223,6 +223,21 @@ public sealed record RecipeExecutionResult(
     int ExitCode,
     string Message);
 
+public sealed record RepositoryProbeRequest(
+    string RepositoryPath);
+
+public sealed record DetectedProject(
+    string Name,
+    string RelativePath,
+    BuildTechnology Technology,
+    string? SuggestedBuildCommand);
+
+public sealed record RepositoryProbeResult(
+    string RepositoryPath,
+    bool Exists,
+    IReadOnlyList<DetectedProject> Projects,
+    IReadOnlyList<string> Warnings);
+
 public interface IDeployPilotStore
 {
     IReadOnlyList<BuildTemplate> BuildTemplates { get; }
