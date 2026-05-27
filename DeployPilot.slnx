@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="DeployPilot.Agent/DeployPilot.Agent.csproj" />
+  <Project Path="DeployPilot.Api/DeployPilot.Api.csproj" />
+  <Project Path="DeployPilot.Artifacts/DeployPilot.Artifacts.csproj" />
+  <Project Path="DeployPilot.IntegrationTests/DeployPilot.IntegrationTests.csproj" />
+  <Project Path="DeployPilot.Launcher/DeployPilot.Launcher.csproj" />
+  <Project Path="DeployPilot.Orchestrator/DeployPilot.Orchestrator.csproj" />
+  <Project Path="DeployPilot.Persistence/DeployPilot.Persistence.csproj" />
+  <Project Path="DeployPilot.Server/DeployPilot.Server.csproj" />
+  <Project Path="DeployPilot.Shared/DeployPilot.Shared.csproj" />
+  <Project Path="DeployPilot.Tests/DeployPilot.Tests.csproj" />
+</Solution>
