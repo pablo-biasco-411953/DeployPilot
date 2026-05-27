@@ -10,6 +10,7 @@ DeployPilot is a build orchestration and versioned distribution platform for tea
 
 - Multi-organization deployment model.
 - Safe build queue with locks per organization, repository and module.
+- Agent-side Git synchronization with branch or SHA checkout.
 - Version history by semantic version and Git SHA.
 - Artifact publishing through local storage + HTTP.
 - Launcher-side update checks, progress, integrity validation and rollback.
@@ -105,6 +106,21 @@ POST /api/repositories/probe
 ```
 
 The probe currently detects `.sln`, `.csproj`, `.vbproj`, `.pjx` and `.prg` files while ignoring build output folders such as `bin`, `obj`, `.git` and `node_modules`.
+
+## Agent Git Sync
+
+The Windows build agent prepares a deterministic Git sync plan for every leased build job. It clones missing repositories, fetches existing repositories, and checks out the requested SHA when one is provided. Git execution is disabled by default through:
+
+```json
+{
+  "Agent": {
+    "ExecuteGit": false,
+    "ExecuteRecipes": false
+  }
+}
+```
+
+This keeps demos safe while still making the production path explicit.
 
 ## Roadmap
 
