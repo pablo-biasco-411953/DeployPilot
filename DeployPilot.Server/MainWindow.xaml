@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{DynamicResource WindowTitle}" Height="760" Width="1180"
-        MinHeight="640" MinWidth="980" Background="#0E1110">
+        MinHeight="640" MinWidth="980" Background="#0E1110"
+        Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="Panel" TargetType="Border">
             <Setter Property="Background" Value="#171B19" />
@@ -19,10 +20,17 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#1F2522" />
+            <Setter Property="Foreground" Value="#D7E2DD" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="246" />
+            <ColumnDefinition Width="260" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -47,13 +55,17 @@
 
                 <StackPanel Grid.Row="1" Margin="0,36,0,0">
                     <Button Content="Live console" Style="{StaticResource PrimaryButton}" />
-                    <Button Content="Clients and builds" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
-                    <Button Content="Diagnostics" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
-                    <Button Content="Repositories" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
+                    <Button Content="Clients and builds" Margin="0,10,0,0" Style="{StaticResource SecondaryButton}" />
+                    <Button Content="Diagnostics" Margin="0,10,0,0" Style="{StaticResource SecondaryButton}" />
+                    <Button Content="Repositories" Margin="0,10,0,0" Style="{StaticResource SecondaryButton}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="3">
-                    <CheckBox Content="Silent mode" Foreground="#D7E2DD" />
+                    <TextBlock Text="API endpoint" Foreground="#55D494" FontWeight="SemiBold" />
+                    <TextBox x:Name="ApiEndpointBox" Margin="0,8,0,10" Height="34" Background="#0B0E0D" Foreground="#D7E2DD" BorderBrush="#29312D" />
+                    <Button Content="Refresh dashboard" Click="RefreshButton_Click" Style="{StaticResource PrimaryButton}" />
+                    <Button Content="Seed demo data" Click="SeedDemoButton_Click" Margin="0,10,0,0" Style="{StaticResource SecondaryButton}" />
+                    <CheckBox Content="Silent mode" Foreground="#D7E2DD" Margin="0,14,0,0" />
                     <ComboBox x:Name="LanguageSelector" Margin="0,14,0,0" Height="34" SelectionChanged="LanguageSelector_SelectionChanged">
                         <ComboBoxItem Content="English" Tag="en-US" IsSelected="True" />
                         <ComboBoxItem Content="Español" Tag="es-AR" />
@@ -68,6 +80,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource HeroTitle}" Foreground="White" FontSize="31" FontWeight="Bold" />
                         <TextBlock Text="{DynamicResource HeroSubtitle}" Foreground="#8F9A96" Margin="0,8,0,0" FontSize="14" />
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#55D494" Margin="0,16,0,0" FontWeight="SemiBold" />
                     </StackPanel>
                     <Button Content="Run quick setup" Style="{StaticResource PrimaryButton}" Width="170" HorizontalAlignment="Right" />
                 </Grid>
@@ -76,25 +89,25 @@
                     <Border Style="{StaticResource Panel}" Margin="0,0,10,0">
                         <StackPanel>
                             <TextBlock Text="ACTIVE BUILDS" Foreground="#8F9A96" FontSize="12" />
-                            <TextBlock Text="0" Foreground="White" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="{Binding ActiveBuilds}" Foreground="White" FontSize="32" FontWeight="Bold" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Panel}" Margin="10,0,10,0">
                         <StackPanel>
                             <TextBlock Text="QUEUED" Foreground="#8F9A96" FontSize="12" />
-                            <TextBlock Text="0" Foreground="White" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="{Binding QueuedBuilds}" Foreground="White" FontSize="32" FontWeight="Bold" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Panel}" Margin="10,0,10,0">
                         <StackPanel>
-                            <TextBlock Text="VERSIONS" Foreground="#8F9A96" FontSize="12" />
-                            <TextBlock Text="12" Foreground="White" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="MODULES" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="{Binding ModulesCount}" Foreground="White" FontSize="32" FontWeight="Bold" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Panel}" Margin="10,0,0,0">
                         <StackPanel>
-                            <TextBlock Text="AGENTS" Foreground="#8F9A96" FontSize="12" />
-                            <TextBlock Text="1" Foreground="#55D494" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="RECIPES" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="{Binding BuildTemplatesCount}" Foreground="#55D494" FontSize="32" FontWeight="Bold" />
                         </StackPanel>
                     </Border>
                 </UniformGrid>
@@ -116,22 +129,29 @@
                         <Border Style="{StaticResource Panel}">
                             <StackPanel>
                                 <TextBlock Text="Diagnostics" Foreground="White" FontSize="16" FontWeight="Bold" />
-                                <TextBlock Text="API: healthy" Foreground="#55D494" Margin="0,14,0,0" />
-                                <TextBlock Text="Database: waiting for setup" Foreground="#F4BE5E" Margin="0,6,0,0" />
-                                <TextBlock Text="Artifact service: healthy" Foreground="#55D494" Margin="0,6,0,0" />
-                                <TextBlock Text="Windows agent: online" Foreground="#55D494" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding ApiStatus}" Foreground="#55D494" Margin="0,14,0,0" />
+                                <TextBlock Text="{Binding DatabaseStatus}" Foreground="#F4BE5E" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding AgentStatus}" Foreground="#55D494" Margin="0,6,0,0" />
                             </StackPanel>
                         </Border>
 
                         <Border Style="{StaticResource Panel}" Margin="0,22,0,0">
                             <StackPanel>
-                                <TextBlock Text="Resource usage" Foreground="White" FontSize="16" FontWeight="Bold" />
-                                <TextBlock Text="CPU" Foreground="#8F9A96" Margin="0,16,0,4" />
-                                <ProgressBar Value="18" Height="8" Foreground="#55D494" Background="#0B0E0D" />
-                                <TextBlock Text="Memory" Foreground="#8F9A96" Margin="0,16,0,4" />
-                                <ProgressBar Value="42" Height="8" Foreground="#63A4FF" Background="#0B0E0D" />
-                                <TextBlock Text="Network" Foreground="#8F9A96" Margin="0,16,0,4" />
-                                <ProgressBar Value="9" Height="8" Foreground="#F4BE5E" Background="#0B0E0D" />
+                                <TextBlock Text="Latest builds" Foreground="White" FontSize="16" FontWeight="Bold" />
+                                <ItemsControl ItemsSource="{Binding Builds}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#0B0E0D" BorderBrush="#26302B" BorderThickness="1" Padding="10" Margin="0,0,0,8" CornerRadius="8">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Subtitle}" Foreground="#8F9A96" />
+                                                    <TextBlock Text="{Binding Status}" Foreground="#55D494" />
+                                                    <ProgressBar Value="{Binding Progress}" Height="6" Foreground="#55D494" Background="#141817" Margin="0,6,0,0" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </Border>
                     </StackPanel>
