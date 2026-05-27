@@ -32,47 +32,6 @@ flowchart LR
   Launcher --> Artifacts
 ```
 
-```mermaid
-flowchart TB
-  subgraph "Desktop Apps (WPF)"
-    Server["🖥️ Server\nConsola admin WPF"]
-    Launcher["📦 Launcher\nActualizador WPF"]
-  end
-
-  subgraph "Backend Services"
-    Api["🌐 API\nREST Minimal APIs"]
-    Orchestrator["⚙️ Orchestrator\nWorker Service"]
-    Artifacts["📁 Artifacts\nHTTP file server"]
-  end
-
-  subgraph "Core"
-    Shared["🧩 Shared\nDominio + servicios"]
-    Persistence["💾 Persistence\nEF Core"]
-    Client["📡 Client\nHTTP SDK"]
-  end
-
-  subgraph "Build"
-    Agent["🤖 Agent\nWindows Build Agent"]
-    Recipes["📜 Recipes\nPowerShell scripts"]
-  end
-
-  Server -->|HTTP| Api
-  Launcher -->|HTTP| Api
-  Launcher -->|Download| Artifacts
-  Api --> Persistence
-  Api --> Orchestrator
-  Orchestrator --> Agent
-  Agent --> Recipes
-  Agent --> Artifacts
-  Server --> Client
-  Launcher --> Client
-  Client --> Shared
-  Api --> Shared
-  Persistence --> Shared
-```
-
-
-
 
 ## Projects
 
