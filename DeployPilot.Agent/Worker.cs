@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 public class Worker(
     ILogger<Worker> logger,
     DeployPilotApiClient apiClient,
+    GitSyncPlanner gitSyncPlanner,
+    IGitSyncRunner gitSyncRunner,
     RecipeExecutionPlanner planner,
     IRecipeRunner runner,
     IOptions<AgentOptions> options) : BackgroundService
@@ -25,6 +27,15 @@ public class Worker(
 
                 logger.LogInformation("Leased build job {BuildJobId} using recipe {RecipeName}.", lease.Job.Id, lease.Template.Name);
                 await apiClient.ReportEventAsync(lease.Job.Id, BuildEventLevel.Info, "Agent leased the build job.", 10, stoppingToken);
+
+                var gitPlan = gitSyncPlanner.CreatePlan(lease, options.Value);
+                await apiClient.ReportEventAsync(lease.Job.Id, BuildEventLevel.Info, "Synchronizing repository.", 15, stoppingToken);
+                var gitResult = await gitSyncRunner.RunAsync(gitPlan, options.Value.ExecuteGit, stoppingToken);
+                if (!gitResult.Succeeded)
+                {
+                    await apiClient.CompleteBuildJobAsync(lease.Job.Id, succeeded: false, gitResult.Message, stoppingToken);
+                    continue;
+                }
 
                 var plan = planner.CreatePlan(lease, options.Value);
                 await apiClient.ReportEventAsync(lease.Job.Id, BuildEventLevel.Info, $"Prepared recipe {lease.Template.Name}.", 25, stoppingToken);

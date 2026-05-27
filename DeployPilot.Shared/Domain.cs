@@ -223,6 +223,18 @@ public sealed record RecipeExecutionResult(
     int ExitCode,
     string Message);
 
+public sealed record GitSyncPlan(
+    Guid RepositoryId,
+    string RemoteUrl,
+    string Branch,
+    string? RequestedSha,
+    string RepositoryPath,
+    IReadOnlyList<IReadOnlyList<string>> Commands);
+
+public sealed record GitSyncResult(
+    bool Succeeded,
+    string Message);
+
 public sealed record RepositoryProbeRequest(
     string RepositoryPath);
 

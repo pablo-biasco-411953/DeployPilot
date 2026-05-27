@@ -1,6 +1,7 @@
 using DeployPilot.Shared;
 using DeployPilot.Agent;
 using DeployPilot.Client;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DeployPilot.Tests;
 
@@ -191,6 +192,75 @@ public class CoreBehaviorTests
         Assert.Contains("-ProjectPath", plan.Arguments);
         Assert.Contains("src/DesktopSuite/DesktopSuite.csproj", plan.Arguments);
         Assert.Contains(job.Id.ToString("N"), plan.OutputPath);
+    }
+
+    [Fact]
+    public void GitSyncPlannerChecksOutRequestedShaWhenProvided()
+    {
+        var job = CreateJob(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()) with
+        {
+            RequestedSha = "abc123"
+        };
+        var repository = new RepositoryDefinition(
+            job.RepositoryId,
+            job.OrganizationId,
+            "Desktop Suite",
+            "https://example.com/desktop-suite.git",
+            "main",
+            BuildTechnology.DotNetSdk,
+            "src/DesktopSuite/DesktopSuite.csproj",
+            null,
+            DateTimeOffset.UtcNow);
+        var template = new BuildTemplate(Guid.NewGuid(), ".NET SDK", BuildTechnology.DotNetSdk, "recipes/dotnet-sdk.ps1", "", true);
+        var options = new AgentOptions { WorkspaceRoot = "C:/deploypilot/workspace" };
+
+        var plan = new GitSyncPlanner().CreatePlan(new AgentBuildLease(job, repository, template), options);
+
+        Assert.Equal(repository.Id, plan.RepositoryId);
+        Assert.Equal("abc123", plan.RequestedSha);
+        Assert.Contains(plan.Commands, command => command.SequenceEqual(new[] { "-C", plan.RepositoryPath, "checkout", "abc123" }));
+        Assert.Contains(repository.Id.ToString("N"), plan.RepositoryPath);
+    }
+
+    [Fact]
+    public void GitSyncPlannerUsesDefaultBranchWhenShaIsMissing()
+    {
+        var job = CreateJob(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var repository = new RepositoryDefinition(
+            job.RepositoryId,
+            job.OrganizationId,
+            "Desktop Suite",
+            "https://example.com/desktop-suite.git",
+            "release",
+            BuildTechnology.DotNetSdk,
+            "src/DesktopSuite/DesktopSuite.csproj",
+            null,
+            DateTimeOffset.UtcNow);
+        var template = new BuildTemplate(Guid.NewGuid(), ".NET SDK", BuildTechnology.DotNetSdk, "recipes/dotnet-sdk.ps1", "", true);
+        var options = new AgentOptions { WorkspaceRoot = "C:/deploypilot/workspace" };
+
+        var plan = new GitSyncPlanner().CreatePlan(new AgentBuildLease(job, repository, template), options);
+
+        Assert.Null(plan.RequestedSha);
+        Assert.Contains(plan.Commands, command => command.SequenceEqual(new[] { "-C", plan.RepositoryPath, "checkout", "release" }));
+    }
+
+    [Fact]
+    public async Task GitSyncRunnerDryRunDoesNotCreateWorkspace()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), "DeployPilotTests", Guid.NewGuid().ToString("N"), "repo");
+        var plan = new GitSyncPlan(
+            Guid.NewGuid(),
+            "https://example.com/desktop-suite.git",
+            "main",
+            null,
+            repositoryPath,
+            new[] { new[] { "clone", "--no-checkout", "https://example.com/desktop-suite.git", repositoryPath } });
+
+        var result = await new GitSyncRunner(NullLogger<GitSyncRunner>.Instance).RunAsync(plan, executeGit: false, CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.False(Directory.Exists(repositoryPath));
     }
 
     [Fact]

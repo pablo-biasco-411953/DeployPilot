@@ -11,4 +11,6 @@ public sealed class AgentOptions
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     public bool ExecuteRecipes { get; set; }
+
+    public bool ExecuteGit { get; set; }
 }
