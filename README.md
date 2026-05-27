@@ -1,0 +1,117 @@
+# DeployPilot
+
+[English](README.md) | [Español](docs/es/README.md)
+
+DeployPilot is a build orchestration and versioned distribution platform for teams that ship desktop applications to many customers, machines or tenants. It replaces manual file copying with a controlled flow: register repositories, build modules through recipes, publish signed artifacts, let launchers detect updates, and keep a rollback history.
+
+> Portfolio status: this repository contains the first working product skeleton, core domain logic, tests, API endpoints, Windows UI shells, build recipes and bilingual documentation.
+
+## Why DeployPilot?
+
+- Multi-organization deployment model.
+- Safe build queue with locks per organization, repository and module.
+- Version history by semantic version and Git SHA.
+- Artifact publishing through local storage + HTTP.
+- Launcher-side update checks, progress, integrity validation and rollback.
+- Build recipes for .NET SDK, MSBuild, WinForms, FoxPro and custom commands.
+- English/Spanish localization from day one.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Server["DeployPilot Server WPF"] --> Api["DeployPilot API"]
+  Launcher["DeployPilot Launcher WPF"] --> Api
+  Api --> Db[("MySQL / Postgres")]
+  Api --> Orchestrator["Orchestrator"]
+  Orchestrator --> Agent["Windows Build Agent"]
+  Agent --> Recipes["PowerShell Build Recipes"]
+  Agent --> Artifacts["Artifact HTTP Service"]
+  Launcher --> Artifacts
+```
+
+## Projects
+
+| Project | Purpose |
+| --- | --- |
+| `DeployPilot.Server` | Windows admin/tray console for setup, diagnostics, metrics and build visibility. |
+| `DeployPilot.Launcher` | Client updater/installer UI with localization and version actions. |
+| `DeployPilot.Api` | REST API for organizations, repositories, modules, builds, versions and launcher checks. |
+| `DeployPilot.Persistence` | EF Core storage layer for InMemory, Postgres/Supabase and MySQL. |
+| `DeployPilot.Orchestrator` | Build queue and worker coordination service. |
+| `DeployPilot.Artifacts` | Lightweight HTTP artifact server. |
+| `DeployPilot.Agent` | Windows-native build agent that selects recipes. |
+| `DeployPilot.Shared` | Domain models, queue, versioning, manifests, localization and validation. |
+| `DeployPilot.Tests` | xUnit unit tests. |
+| `DeployPilot.IntegrationTests` | Core workflow tests. |
+
+## Quick Start
+
+```powershell
+dotnet restore
+dotnet test
+dotnet run --project DeployPilot.Api
+dotnet run --project DeployPilot.Artifacts
+```
+
+Optional demo infrastructure:
+
+```powershell
+docker compose up -d postgres mysql deploypilot-api deploypilot-artifacts deploypilot-orchestrator
+```
+
+The API reads persistence settings from configuration:
+
+```json
+{
+  "Persistence": {
+    "Provider": "Postgres",
+    "ConnectionString": "Host=localhost;Port=5432;Database=deploypilot;Username=deploypilot;Password=deploypilot"
+  }
+}
+```
+
+Supported provider values are `InMemory`, `Postgres` and `MySql`. Supabase uses the `Postgres` provider with its pooled or direct connection string.
+
+The Windows apps can be launched from Visual Studio or with:
+
+```powershell
+dotnet run --project DeployPilot.Server
+dotnet run --project DeployPilot.Launcher
+```
+
+## Supported Build Recipes
+
+- MSBuild classic
+- .NET SDK
+- C# WinForms
+- VB.NET WinForms
+- FoxPro configurable command
+- Custom command
+
+## Roadmap
+
+- Persistent EF Core repositories for MySQL/Postgres.
+- Real agent registration and job leasing.
+- Tray notifications and Windows service installation.
+- Git credential UI and repository probing.
+- Screenshot-ready setup wizard.
+- Artifact signing.
+- Supabase starter guide.
+
+## Documentation
+
+- [Architecture](docs/en/architecture.md)
+- [Server setup](docs/en/server-setup.md)
+- [Launcher setup](docs/en/launcher-setup.md)
+- [Build recipes](docs/en/build-recipes.md)
+
+## Testing
+
+DeployPilot uses xUnit:
+
+```powershell
+dotnet test
+```
+
+The current suite covers version comparison, update resolution, build locks, cancellation, manifests, integrity checks, recipe selection, localization fallback, setup validation, EF persistence and the core deployment workflow.

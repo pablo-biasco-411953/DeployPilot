@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: deploypilot
+      POSTGRES_USER: deploypilot
+      POSTGRES_PASSWORD: deploypilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: deploypilot
+      MYSQL_USER: deploypilot
+      MYSQL_PASSWORD: deploypilot
+      MYSQL_ROOT_PASSWORD: deploypilot-root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  deploypilot-api:
+    build:
+      context: .
+      dockerfile: deploypilot-api.Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Persistence__Provider: Postgres
+      Persistence__ConnectionString: Host=postgres;Port=5432;Database=deploypilot;Username=deploypilot;Password=deploypilot
+    ports:
+      - "5080:8080"
+    depends_on:
+      - postgres
+
+  deploypilot-artifacts:
+    build:
+      context: .
+      dockerfile: deploypilot-artifacts.Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      DEPLOYPILOT_ARTIFACT_ROOT: /data/artifacts
+    ports:
+      - "5081:8080"
+    volumes:
+      - artifact-data:/data/artifacts
+
+  deploypilot-orchestrator:
+    build:
+      context: .
+      dockerfile: deploypilot-orchestrator.Dockerfile
+    depends_on:
+      - deploypilot-api
+
+volumes:
+  postgres-data:
+  mysql-data:
+  artifact-data:
