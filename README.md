@@ -122,6 +122,10 @@ The Windows build agent prepares a deterministic Git sync plan for every leased 
 
 This keeps demos safe while still making the production path explicit.
 
+## Design Patterns
+
+DeployPilot applies GoF patterns only where they clarify extension points. Current documented usage includes Strategy for recipe selection, Factory Method for default selector construction, and Facade for client-facing APIs. See [Design patterns](docs/en/design-patterns.md).
+
 ## Roadmap
 
 - Agent registration and signed job tokens.
@@ -141,6 +145,7 @@ DeployPilot uses short-lived feature and hotfix branches. Feature branches intro
 - [Server setup](docs/en/server-setup.md)
 - [Launcher setup](docs/en/launcher-setup.md)
 - [Build recipes](docs/en/build-recipes.md)
+- [Design patterns](docs/en/design-patterns.md)
 
 ## Testing
 

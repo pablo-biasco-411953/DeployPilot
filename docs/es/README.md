@@ -27,3 +27,4 @@ dotnet run --project DeployPilot.Artifacts
 - [Configuracion del server](server-setup.md)
 - [Configuracion del launcher](launcher-setup.md)
 - [Recetas de build](build-recipes.md)
+- [Patrones de diseno](design-patterns.md)
