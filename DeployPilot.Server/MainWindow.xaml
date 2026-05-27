@@ -1,0 +1,142 @@
+<Window x:Class="DeployPilot.Server.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource WindowTitle}" Height="760" Width="1180"
+        MinHeight="640" MinWidth="980" Background="#0E1110">
+    <Window.Resources>
+        <Style x:Key="Panel" TargetType="Border">
+            <Setter Property="Background" Value="#171B19" />
+            <Setter Property="BorderBrush" Value="#29312D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#55D494" />
+            <Setter Property="Foreground" Value="#07120D" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="246" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Background="#131716" BorderBrush="#242B27" BorderThickness="0,0,1,0">
+            <Grid Margin="22">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="42" Height="42" CornerRadius="10" Background="#55D494">
+                        <TextBlock Text="D" Foreground="#07120D" FontWeight="Black" FontSize="21" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0">
+                        <TextBlock Text="DeployPilot" Foreground="White" FontWeight="Bold" FontSize="17" />
+                        <TextBlock Text="Server" Foreground="#91A099" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,36,0,0">
+                    <Button Content="Live console" Style="{StaticResource PrimaryButton}" />
+                    <Button Content="Clients and builds" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
+                    <Button Content="Diagnostics" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
+                    <Button Content="Repositories" Margin="0,10,0,0" Height="42" Background="#1F2522" Foreground="#D7E2DD" BorderThickness="0" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3">
+                    <CheckBox Content="Silent mode" Foreground="#D7E2DD" />
+                    <ComboBox x:Name="LanguageSelector" Margin="0,14,0,0" Height="34" SelectionChanged="LanguageSelector_SelectionChanged">
+                        <ComboBoxItem Content="English" Tag="en-US" IsSelected="True" />
+                        <ComboBoxItem Content="Español" Tag="es-AR" />
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="30">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource HeroTitle}" Foreground="White" FontSize="31" FontWeight="Bold" />
+                        <TextBlock Text="{DynamicResource HeroSubtitle}" Foreground="#8F9A96" Margin="0,8,0,0" FontSize="14" />
+                    </StackPanel>
+                    <Button Content="Run quick setup" Style="{StaticResource PrimaryButton}" Width="170" HorizontalAlignment="Right" />
+                </Grid>
+
+                <UniformGrid Columns="4" Margin="0,26,0,0">
+                    <Border Style="{StaticResource Panel}" Margin="0,0,10,0">
+                        <StackPanel>
+                            <TextBlock Text="ACTIVE BUILDS" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="0" Foreground="White" FontSize="32" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}" Margin="10,0,10,0">
+                        <StackPanel>
+                            <TextBlock Text="QUEUED" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="0" Foreground="White" FontSize="32" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}" Margin="10,0,10,0">
+                        <StackPanel>
+                            <TextBlock Text="VERSIONS" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="12" Foreground="White" FontSize="32" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}" Margin="10,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="AGENTS" Foreground="#8F9A96" FontSize="12" />
+                            <TextBlock Text="1" Foreground="#55D494" FontSize="32" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <Grid Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource Panel}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="Visual console" Foreground="White" FontSize="16" FontWeight="Bold" />
+                            <ListBox ItemsSource="{Binding ConsoleEvents}" Margin="0,14,0,0" Height="315" Background="#0B0E0D" BorderBrush="#26302B" Foreground="#55D494" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                        <Border Style="{StaticResource Panel}">
+                            <StackPanel>
+                                <TextBlock Text="Diagnostics" Foreground="White" FontSize="16" FontWeight="Bold" />
+                                <TextBlock Text="API: healthy" Foreground="#55D494" Margin="0,14,0,0" />
+                                <TextBlock Text="Database: waiting for setup" Foreground="#F4BE5E" Margin="0,6,0,0" />
+                                <TextBlock Text="Artifact service: healthy" Foreground="#55D494" Margin="0,6,0,0" />
+                                <TextBlock Text="Windows agent: online" Foreground="#55D494" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Panel}" Margin="0,22,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Resource usage" Foreground="White" FontSize="16" FontWeight="Bold" />
+                                <TextBlock Text="CPU" Foreground="#8F9A96" Margin="0,16,0,4" />
+                                <ProgressBar Value="18" Height="8" Foreground="#55D494" Background="#0B0E0D" />
+                                <TextBlock Text="Memory" Foreground="#8F9A96" Margin="0,16,0,4" />
+                                <ProgressBar Value="42" Height="8" Foreground="#63A4FF" Background="#0B0E0D" />
+                                <TextBlock Text="Network" Foreground="#8F9A96" Margin="0,16,0,4" />
+                                <ProgressBar Value="9" Height="8" Foreground="#F4BE5E" Background="#0B0E0D" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
