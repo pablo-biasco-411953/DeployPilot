@@ -158,7 +158,52 @@ app.MapPost("/api/agents/build-jobs/{jobId:guid}/complete", (Guid jobId, BuildJo
     return Results.Ok(job);
 });
 
+app.MapPost("/api/demo/seed", (IDeployPilotStore store) =>
+{
+    var existingOrganization = store.GetOrganizations().FirstOrDefault(item => item.Slug == "demo-health");
+    if (existingOrganization is not null)
+    {
+        var existingApplication = store.GetApplications().First(item => item.OrganizationId == existingOrganization.Id);
+        var existingModules = store.GetModules()
+            .Where(item => item.ApplicationId == existingApplication.Id)
+            .Select(item => item.Id)
+            .ToArray();
+
+        return Results.Ok(new DemoSeedResult(existingOrganization.Id, existingApplication.Id, existingModules, "Demo data already exists."));
+    }
+
+    var organization = store.AddOrganization("Demo Health", "demo-health");
+    var repository = store.AddRepository(
+        organization.Id,
+        "Demo Desktop Suite",
+        "https://github.com/example/demo-desktop-suite.git",
+        "main",
+        BuildTechnology.DotNetSdk,
+        "src/DemoDesktopSuite/DemoDesktopSuite.csproj",
+        null);
+    var application = store.AddApplication(organization.Id, "Demo Desktop Suite", "demo-desktop-suite");
+    var inventory = store.AddModule(application.Id, "Inventory Desktop", "InventoryDesktop.exe", "%LocalAppData%/DeployPilot/InventoryDesktop");
+    var billing = store.AddModule(application.Id, "Billing Console", "BillingConsole.exe", "%LocalAppData%/DeployPilot/BillingConsole");
+    var reports = store.AddModule(application.Id, "Lab Reports", "LabReports.exe", "%LocalAppData%/DeployPilot/LabReports");
+
+    AddDemoVersion(store, inventory.Id, "1.3.0", "abc123inventory", "Improved build manifests, rollback and integrity validation.", "inventory-desktop-1.3.0.zip");
+    AddDemoVersion(store, billing.Id, "2.0.4", "abc123billing", "Billing workflow stability update.", "billing-console-2.0.4.zip");
+    AddDemoVersion(store, reports.Id, "0.9.8", "abc123reports", "First public beta with version picker support.", "lab-reports-0.9.8.zip");
+
+    store.RequestBuild(organization.Id, repository.Id, application.Id, inventory.Id, "demo", "1.3.0", "abc123inventory");
+
+    return Results.Created(
+        "/api/demo/seed",
+        new DemoSeedResult(organization.Id, application.Id, [inventory.Id, billing.Id, reports.Id], "Demo data created."));
+});
+
 app.Run();
+
+static void AddDemoVersion(IDeployPilotStore store, Guid moduleId, string versionNumber, string gitSha, string changelog, string fileName)
+{
+    var version = store.AddVersion(moduleId, versionNumber, gitSha, changelog);
+    store.AddArtifact(version.Id, fileName, $"demo/{fileName}", Random.Shared.Next(1_000_000, 8_000_000), Convert.ToHexString(Guid.NewGuid().ToByteArray()).ToLowerInvariant().PadRight(64, '0')[..64]);
+}
 
 public sealed record CreateOrganizationRequest(string Name, string Slug);
 
@@ -189,5 +234,7 @@ public sealed record CreateBuildEventRequest(BuildEventLevel Level, string Messa
 public sealed record CreateVersionRequest(string Version, string GitSha, string Changelog);
 
 public sealed record CreateArtifactRequest(string FileName, string RelativePath, long SizeBytes, string Sha256);
+
+public sealed record DemoSeedResult(Guid OrganizationId, Guid ApplicationId, IReadOnlyList<Guid> ModuleIds, string Message);
 
 public partial class Program;

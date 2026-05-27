@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DeployPilot.Shared\DeployPilot.Shared.csproj" />
     <ProjectReference Include="..\DeployPilot.Agent\DeployPilot.Agent.csproj" />
+    <ProjectReference Include="..\DeployPilot.Client\DeployPilot.Client.csproj" />
   </ItemGroup>
 
 </Project>

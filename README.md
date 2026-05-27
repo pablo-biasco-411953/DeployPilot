@@ -37,6 +37,7 @@ flowchart LR
 | `DeployPilot.Server` | Windows admin/tray console for setup, diagnostics, metrics and build visibility. |
 | `DeployPilot.Launcher` | Client updater/installer UI with localization and version actions. |
 | `DeployPilot.Api` | REST API for organizations, repositories, modules, builds, versions and launcher checks. |
+| `DeployPilot.Client` | Shared HTTP SDK used by Windows clients and future tooling. |
 | `DeployPilot.Persistence` | EF Core storage layer for InMemory, Postgres/Supabase and MySQL. |
 | `DeployPilot.Orchestrator` | Build queue and worker coordination service. |
 | `DeployPilot.Artifacts` | Lightweight HTTP artifact server. |
@@ -80,6 +81,8 @@ dotnet run --project DeployPilot.Server
 dotnet run --project DeployPilot.Launcher
 ```
 
+For a quick end-to-end demo, start the API, open the launcher, click `Seed demo data`, then `Refresh`. The launcher reads modules from the API and checks each module for available versions.
+
 ## Supported Build Recipes
 
 - MSBuild classic
@@ -91,8 +94,7 @@ dotnet run --project DeployPilot.Launcher
 
 ## Roadmap
 
-- Persistent EF Core repositories for MySQL/Postgres.
-- Real agent registration and job leasing.
+- Agent registration and signed job tokens.
 - Tray notifications and Windows service installation.
 - Git credential UI and repository probing.
 - Screenshot-ready setup wizard.
@@ -114,4 +116,4 @@ DeployPilot uses xUnit:
 dotnet test
 ```
 
-The current suite covers version comparison, update resolution, build locks, cancellation, manifests, integrity checks, recipe selection, localization fallback, setup validation, EF persistence and the core deployment workflow.
+The current suite covers version comparison, update resolution, build locks, cancellation, manifests, integrity checks, recipe selection, localization fallback, setup validation, EF persistence, HTTP client validation, recipe planning and the core deployment workflow.

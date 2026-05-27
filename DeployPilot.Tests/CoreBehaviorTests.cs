@@ -1,5 +1,6 @@
 using DeployPilot.Shared;
 using DeployPilot.Agent;
+using DeployPilot.Client;
 
 namespace DeployPilot.Tests;
 
@@ -190,6 +191,14 @@ public class CoreBehaviorTests
         Assert.Contains("-ProjectPath", plan.Arguments);
         Assert.Contains("src/DesktopSuite/DesktopSuite.csproj", plan.Arguments);
         Assert.Contains(job.Id.ToString("N"), plan.OutputPath);
+    }
+
+    [Fact]
+    public void ClientFactoryRejectsRelativeApiUrls()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => DeployPilotClientFactory.Create("/api"));
+
+        Assert.Equal("apiBaseUrl", exception.ParamName);
     }
 
     private static BuildJob CreateJob(Guid organizationId, Guid repositoryId, Guid applicationId, Guid moduleId)

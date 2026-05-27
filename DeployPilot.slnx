@@ -2,6 +2,7 @@
   <Project Path="DeployPilot.Agent/DeployPilot.Agent.csproj" />
   <Project Path="DeployPilot.Api/DeployPilot.Api.csproj" />
   <Project Path="DeployPilot.Artifacts/DeployPilot.Artifacts.csproj" />
+  <Project Path="DeployPilot.Client/DeployPilot.Client.csproj" />
   <Project Path="DeployPilot.IntegrationTests/DeployPilot.IntegrationTests.csproj" />
   <Project Path="DeployPilot.Launcher/DeployPilot.Launcher.csproj" />
   <Project Path="DeployPilot.Orchestrator/DeployPilot.Orchestrator.csproj" />
