@@ -194,6 +194,35 @@ public sealed record UpdateCheckResult(
     ArtifactRecord? Artifact,
     IReadOnlyList<VersionRecord> History);
 
+public sealed record AgentBuildLease(
+    BuildJob Job,
+    RepositoryDefinition Repository,
+    BuildTemplate Template);
+
+public sealed record BuildJobCompletionRequest(
+    bool Succeeded,
+    string? Message);
+
+public sealed record BuildJobEventRequest(
+    BuildEventLevel Level,
+    string Message,
+    int Progress);
+
+public sealed record RecipeExecutionPlan(
+    Guid BuildJobId,
+    BuildTechnology Technology,
+    string ScriptPath,
+    string RepositoryPath,
+    string ProjectPath,
+    string OutputPath,
+    string? BuildCommand,
+    IReadOnlyList<string> Arguments);
+
+public sealed record RecipeExecutionResult(
+    bool Succeeded,
+    int ExitCode,
+    string Message);
+
 public interface IDeployPilotStore
 {
     IReadOnlyList<BuildTemplate> BuildTemplates { get; }

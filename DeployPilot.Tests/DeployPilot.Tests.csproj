@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DeployPilot.Shared\DeployPilot.Shared.csproj" />
+    <ProjectReference Include="..\DeployPilot.Agent\DeployPilot.Agent.csproj" />
   </ItemGroup>
 
 </Project>

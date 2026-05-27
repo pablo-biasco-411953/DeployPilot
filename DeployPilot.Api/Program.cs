@@ -28,6 +28,12 @@ app.MapPost("/api/organizations", (CreateOrganizationRequest request, IDeployPil
 
 app.MapGet("/api/repositories", (IDeployPilotStore store) => Results.Ok(store.GetRepositories()));
 
+app.MapGet("/api/repositories/{repositoryId:guid}", (Guid repositoryId, IDeployPilotStore store) =>
+{
+    var repository = store.GetRepositories().FirstOrDefault(item => item.Id == repositoryId);
+    return repository is null ? Results.NotFound() : Results.Ok(repository);
+});
+
 app.MapPost("/api/repositories", (CreateRepositoryRequest request, IDeployPilotStore store) =>
 {
     var repository = store.AddRepository(
@@ -111,10 +117,31 @@ app.MapGet("/api/launcher/modules/{moduleId:guid}/updates", (Guid moduleId, stri
 app.MapPost("/api/agents/build-jobs/lease", (IDeployPilotStore store) =>
 {
     var job = store.TryLeaseNextBuildJob(DateTimeOffset.UtcNow);
-    return job is null ? Results.NoContent() : Results.Ok(job);
+    if (job is null)
+    {
+        return Results.NoContent();
+    }
+
+    var repository = store.GetRepositories().FirstOrDefault(item => item.Id == job.RepositoryId);
+    if (repository is null)
+    {
+        store.CompleteBuildJob(job.Id, succeeded: false, DateTimeOffset.UtcNow);
+        store.AddBuildEvent(job.Id, BuildEventLevel.Error, "Repository was not found for leased build job.", 0);
+        return Results.Problem("Repository was not found for leased build job.");
+    }
+
+    var template = store.BuildTemplates.FirstOrDefault(item => item.IsEnabled && item.Technology == repository.Technology);
+    if (template is null)
+    {
+        store.CompleteBuildJob(job.Id, succeeded: false, DateTimeOffset.UtcNow);
+        store.AddBuildEvent(job.Id, BuildEventLevel.Error, "Build template was not found for leased build job.", 0);
+        return Results.Problem("Build template was not found for leased build job.");
+    }
+
+    return Results.Ok(new AgentBuildLease(job, repository, template));
 });
 
-app.MapPost("/api/agents/build-jobs/{jobId:guid}/complete", (Guid jobId, CompleteBuildJobRequest request, IDeployPilotStore store) =>
+app.MapPost("/api/agents/build-jobs/{jobId:guid}/complete", (Guid jobId, BuildJobCompletionRequest request, IDeployPilotStore store) =>
 {
     var job = store.CompleteBuildJob(jobId, request.Succeeded, DateTimeOffset.UtcNow);
     if (job is null)
@@ -162,7 +189,5 @@ public sealed record CreateBuildEventRequest(BuildEventLevel Level, string Messa
 public sealed record CreateVersionRequest(string Version, string GitSha, string Changelog);
 
 public sealed record CreateArtifactRequest(string FileName, string RelativePath, long SizeBytes, string Sha256);
-
-public sealed record CompleteBuildJobRequest(bool Succeeded, string? Message);
 
 public partial class Program;

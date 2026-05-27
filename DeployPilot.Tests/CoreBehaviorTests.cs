@@ -1,4 +1,5 @@
 using DeployPilot.Shared;
+using DeployPilot.Agent;
 
 namespace DeployPilot.Tests;
 
@@ -153,6 +154,42 @@ public class CoreBehaviorTests
 
         Assert.Contains("A database connection string is required.", errors);
         Assert.Contains("Default language must be English or Spanish.", errors);
+    }
+
+    [Fact]
+    public void RecipePlannerBuildsDeterministicPowerShellPlan()
+    {
+        var job = CreateJob(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var repository = new RepositoryDefinition(
+            job.RepositoryId,
+            job.OrganizationId,
+            "Desktop Suite",
+            "https://example.com/desktop-suite.git",
+            "main",
+            BuildTechnology.DotNetSdk,
+            "src/DesktopSuite/DesktopSuite.csproj",
+            null,
+            DateTimeOffset.UtcNow);
+        var template = new BuildTemplate(
+            Guid.NewGuid(),
+            ".NET SDK",
+            BuildTechnology.DotNetSdk,
+            "recipes/dotnet-sdk.ps1",
+            "Builds SDK-style projects.",
+            true);
+        var options = new AgentOptions
+        {
+            WorkspaceRoot = "C:/deploypilot/workspace",
+            OutputRoot = "C:/deploypilot/output"
+        };
+
+        var plan = new RecipeExecutionPlanner().CreatePlan(new AgentBuildLease(job, repository, template), options);
+
+        Assert.Equal(job.Id, plan.BuildJobId);
+        Assert.EndsWith("recipes/dotnet-sdk.ps1", plan.ScriptPath.Replace('\\', '/'));
+        Assert.Contains("-ProjectPath", plan.Arguments);
+        Assert.Contains("src/DesktopSuite/DesktopSuite.csproj", plan.Arguments);
+        Assert.Contains(job.Id.ToString("N"), plan.OutputPath);
     }
 
     private static BuildJob CreateJob(Guid organizationId, Guid repositoryId, Guid applicationId, Guid moduleId)
