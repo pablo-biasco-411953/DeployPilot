@@ -255,6 +255,13 @@ public sealed record RepositoryProbeResult(
     IReadOnlyList<DetectedProject> Projects,
     IReadOnlyList<string> Warnings);
 
+public interface IRecipeSelectionStrategy
+{
+    bool CanSelect(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates);
+
+    BuildTemplate Select(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates);
+}
+
 public interface IDeployPilotStore
 {
     IReadOnlyList<BuildTemplate> BuildTemplates { get; }

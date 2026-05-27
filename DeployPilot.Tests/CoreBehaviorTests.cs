@@ -131,6 +131,26 @@ public class CoreBehaviorTests
     }
 
     [Fact]
+    public void RecipeSelectorPrefersCustomCommandWhenRepositoryDefinesOne()
+    {
+        var store = new InMemoryDeployPilotStore();
+        var repository = new RepositoryDefinition(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Demo",
+            "https://example.com/demo.git",
+            "main",
+            BuildTechnology.DotNetSdk,
+            "src/Demo/Demo.csproj",
+            "dotnet publish src/Demo/Demo.csproj",
+            DateTimeOffset.UtcNow);
+
+        var template = BuildRecipeSelectorFactory.CreateDefault().Select(repository, store.BuildTemplates);
+
+        Assert.Equal(BuildTechnology.CustomCommand, template.Technology);
+    }
+
+    [Fact]
     public void LocalizationFallsBackToEnglish()
     {
         var catalog = new LocalizationCatalog();

@@ -195,12 +195,77 @@ public sealed class BuildQueue
     }
 }
 
+public static class BuildRecipeSelectorFactory
+{
+    public static RecipeSelector CreateDefault()
+    {
+        return new RecipeSelector(RecipeSelector.CreateDefaultStrategies());
+    }
+}
+
 public sealed class RecipeSelector
 {
+    private readonly IReadOnlyList<IRecipeSelectionStrategy> _strategies;
+
+    public RecipeSelector()
+        : this(CreateDefaultStrategies())
+    {
+    }
+
+    public static IReadOnlyList<IRecipeSelectionStrategy> CreateDefaultStrategies()
+    {
+        return
+        [
+            new CustomCommandRecipeSelectionStrategy(),
+            new TechnologyRecipeSelectionStrategy()
+        ];
+    }
+
+    public RecipeSelector(IReadOnlyList<IRecipeSelectionStrategy> strategies)
+    {
+        _strategies = strategies.Count == 0
+            ? throw new ArgumentException("At least one recipe selection strategy is required.", nameof(strategies))
+            : strategies;
+    }
+
     public BuildTemplate Select(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates)
     {
-        return templates.FirstOrDefault(template => template.IsEnabled && template.Technology == repository.Technology)
-            ?? throw new InvalidOperationException($"No enabled build recipe was found for {repository.Technology}.");
+        foreach (var strategy in _strategies)
+        {
+            if (strategy.CanSelect(repository, templates))
+            {
+                return strategy.Select(repository, templates);
+            }
+        }
+
+        throw new InvalidOperationException($"No enabled build recipe was found for {repository.Technology}.");
+    }
+}
+
+public sealed class CustomCommandRecipeSelectionStrategy : IRecipeSelectionStrategy
+{
+    public bool CanSelect(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates)
+    {
+        return !string.IsNullOrWhiteSpace(repository.BuildCommand) &&
+            templates.Any(template => template.IsEnabled && template.Technology == BuildTechnology.CustomCommand);
+    }
+
+    public BuildTemplate Select(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates)
+    {
+        return templates.First(template => template.IsEnabled && template.Technology == BuildTechnology.CustomCommand);
+    }
+}
+
+public sealed class TechnologyRecipeSelectionStrategy : IRecipeSelectionStrategy
+{
+    public bool CanSelect(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates)
+    {
+        return templates.Any(template => template.IsEnabled && template.Technology == repository.Technology);
+    }
+
+    public BuildTemplate Select(RepositoryDefinition repository, IEnumerable<BuildTemplate> templates)
+    {
+        return templates.First(template => template.IsEnabled && template.Technology == repository.Technology);
     }
 }
 

@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDeployPilotPersistence(builder.Configuration);
 builder.Services.AddSingleton<RepositoryProbeService>();
+builder.Services.AddSingleton(BuildRecipeSelectorFactory.CreateDefault());
 
 var app = builder.Build();
 
@@ -124,7 +125,7 @@ app.MapGet("/api/modules/{moduleId:guid}/versions", (Guid moduleId, IDeployPilot
 app.MapGet("/api/launcher/modules/{moduleId:guid}/updates", (Guid moduleId, string currentVersion, IDeployPilotStore store) =>
     Results.Ok(store.CheckForUpdate(moduleId, currentVersion)));
 
-app.MapPost("/api/agents/build-jobs/lease", (IDeployPilotStore store) =>
+app.MapPost("/api/agents/build-jobs/lease", (IDeployPilotStore store, RecipeSelector recipeSelector) =>
 {
     var job = store.TryLeaseNextBuildJob(DateTimeOffset.UtcNow);
     if (job is null)
@@ -140,8 +141,12 @@ app.MapPost("/api/agents/build-jobs/lease", (IDeployPilotStore store) =>
         return Results.Problem("Repository was not found for leased build job.");
     }
 
-    var template = store.BuildTemplates.FirstOrDefault(item => item.IsEnabled && item.Technology == repository.Technology);
-    if (template is null)
+    BuildTemplate template;
+    try
+    {
+        template = recipeSelector.Select(repository, store.BuildTemplates);
+    }
+    catch (InvalidOperationException)
     {
         store.CompleteBuildJob(job.Id, succeeded: false, DateTimeOffset.UtcNow);
         store.AddBuildEvent(job.Id, BuildEventLevel.Error, "Build template was not found for leased build job.", 0);
