@@ -83,7 +83,7 @@ dotnet run --project DeployPilot.Server
 dotnet run --project DeployPilot.Launcher
 ```
 
-For a quick end-to-end demo, start the API, open the launcher, click `Seed demo data`, then `Refresh`. The launcher reads modules from the API and checks each module for available versions.
+For a quick end-to-end demo, start the API and artifact service, open the launcher, click `Seed demo data`, then `Refresh`. The API creates demo version records and zip artifacts with real SHA-256 hashes, and the launcher can download, validate and install them from the artifact service.
 
 ## Supported Build Recipes
 
