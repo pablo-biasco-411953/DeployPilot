@@ -18,6 +18,18 @@ public sealed class DeployPilotApiClient(HttpClient httpClient)
             ?? [];
     }
 
+    public async Task<IReadOnlyList<BuildTemplate>> GetBuildTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetFromJsonAsync<IReadOnlyList<BuildTemplate>>("/api/build-templates", cancellationToken)
+            ?? [];
+    }
+
+    public async Task<IReadOnlyList<BuildJob>> GetBuildJobsAsync(CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetFromJsonAsync<IReadOnlyList<BuildJob>>("/api/build-jobs", cancellationToken)
+            ?? [];
+    }
+
     public async Task<IReadOnlyList<VersionRecord>> GetVersionHistoryAsync(Guid moduleId, CancellationToken cancellationToken = default)
     {
         return await httpClient.GetFromJsonAsync<IReadOnlyList<VersionRecord>>($"/api/modules/{moduleId}/versions", cancellationToken)
