@@ -30,6 +30,14 @@ public sealed class DeployPilotApiClient(HttpClient httpClient)
             ?? [];
     }
 
+    public async Task<RepositoryProbeResult> ProbeRepositoryAsync(string repositoryPath, CancellationToken cancellationToken = default)
+    {
+        using var response = await httpClient.PostAsJsonAsync("/api/repositories/probe", new RepositoryProbeRequest(repositoryPath), cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<RepositoryProbeResult>(cancellationToken)
+            ?? throw new InvalidOperationException("DeployPilot API returned an empty repository probe response.");
+    }
+
     public async Task<IReadOnlyList<VersionRecord>> GetVersionHistoryAsync(Guid moduleId, CancellationToken cancellationToken = default)
     {
         return await httpClient.GetFromJsonAsync<IReadOnlyList<VersionRecord>>($"/api/modules/{moduleId}/versions", cancellationToken)

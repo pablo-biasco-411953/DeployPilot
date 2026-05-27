@@ -201,6 +201,54 @@ public class CoreBehaviorTests
         Assert.Equal("apiBaseUrl", exception.ParamName);
     }
 
+    [Fact]
+    public void RepositoryProbeDetectsSupportedProjectTypes()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"deploypilot-probe-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(Path.Combine(root, "src", "Desktop"));
+        Directory.CreateDirectory(Path.Combine(root, "legacy"));
+        File.WriteAllText(Path.Combine(root, "DeployPilotDemo.sln"), "");
+        File.WriteAllText(Path.Combine(root, "src", "Desktop", "Desktop.csproj"), "<Project />");
+        File.WriteAllText(Path.Combine(root, "legacy", "LegacyBilling.pjx"), "");
+
+        try
+        {
+            var result = new RepositoryProbeService().Probe(root);
+
+            Assert.True(result.Exists);
+            Assert.DoesNotContain(result.Warnings, warning => warning.Contains("No supported", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(result.Projects, project => project.Technology == BuildTechnology.MsBuildClassic && project.RelativePath == "DeployPilotDemo.sln");
+            Assert.Contains(result.Projects, project => project.Technology == BuildTechnology.CSharpWinForms && project.RelativePath == "src/Desktop/Desktop.csproj");
+            Assert.Contains(result.Projects, project => project.Technology == BuildTechnology.FoxPro && project.SuggestedBuildCommand is not null);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RepositoryProbeIgnoresBuildOutputFolders()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"deploypilot-probe-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(root, "src", "obj"));
+        File.WriteAllText(Path.Combine(root, "src", "obj", "Ignored.csproj"), "<Project />");
+
+        try
+        {
+            var result = new RepositoryProbeService().Probe(root);
+
+            Assert.True(result.Exists);
+            Assert.Empty(result.Projects);
+            Assert.Contains("No supported project files were detected.", result.Warnings);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static BuildJob CreateJob(Guid organizationId, Guid repositoryId, Guid applicationId, Guid moduleId)
     {
         return new BuildJob(
