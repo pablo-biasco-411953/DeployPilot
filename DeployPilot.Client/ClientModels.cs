@@ -10,3 +10,8 @@ public sealed record DemoSeedResult(
     Guid ApplicationId,
     IReadOnlyList<Guid> ModuleIds,
     string Message);
+
+public sealed record DownloadProgress(
+    long BytesReceived,
+    long? TotalBytes,
+    double BytesPerSecond);

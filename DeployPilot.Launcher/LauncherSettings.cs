@@ -7,6 +7,10 @@ public sealed class LauncherSettings
 {
     public string ApiBaseUrl { get; set; } = "http://localhost:5080";
 
+    public string ArtifactBaseUrl { get; set; } = "http://localhost:5081";
+
+    public string InstallRoot { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeployPilot", "installed");
+
     public string Language { get; set; } = "en-US";
 
     public Dictionary<Guid, string> InstalledVersions { get; set; } = [];

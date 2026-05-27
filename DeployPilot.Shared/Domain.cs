@@ -187,6 +187,11 @@ public sealed record ArtifactManifest(
     string GitSha,
     DateTimeOffset CreatedAt);
 
+public sealed record ArtifactInstallPlan(
+    Uri ArtifactUri,
+    string StagingPath,
+    string InstallPath);
+
 public sealed record UpdateCheckResult(
     bool HasUpdate,
     string CurrentVersion,

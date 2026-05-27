@@ -65,6 +65,8 @@
                 <StackPanel Grid.Row="3">
                     <TextBlock Text="API endpoint" Foreground="#55D494" FontWeight="SemiBold" />
                     <TextBox x:Name="ApiEndpointBox" Margin="0,8,0,10" Height="34" Background="#0B0E0D" Foreground="#D7E2DD" BorderBrush="#29312D" />
+                    <TextBlock Text="Artifact endpoint" Foreground="#55D494" FontWeight="SemiBold" />
+                    <TextBox x:Name="ArtifactEndpointBox" Margin="0,8,0,10" Height="34" Background="#0B0E0D" Foreground="#D7E2DD" BorderBrush="#29312D" />
                     <Button Content="Refresh" Click="RefreshButton_Click" Style="{StaticResource PrimaryButton}" />
                     <Button Content="Seed demo data" Click="SeedDemoButton_Click" Margin="0,10,0,0" Style="{StaticResource SecondaryButton}" />
                     <ComboBox x:Name="LanguageSelector" Margin="0,14,0,0" Height="34" SelectionChanged="LanguageSelector_SelectionChanged">
@@ -101,8 +103,9 @@
                                     <TextBlock Text="{Binding Status}" Foreground="#55D494" Margin="0,18,0,0" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding Changelog}" Foreground="#D7E2DD" TextWrapping="Wrap" Margin="0,8,0,18" Height="64" />
                                     <ProgressBar Value="{Binding Progress}" Height="8" Foreground="#55D494" Background="#0B0E0D" />
+                                    <TextBlock Text="{Binding SpeedLabel}" Foreground="#55D494" Margin="0,8,0,0" />
                                     <TextBlock Text="{Binding ExecutableName}" Foreground="#8F9A96" Margin="0,8,0,18" />
-                                    <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}" />
+                                    <Button Content="{Binding ActionLabel}" Click="ModuleActionButton_Click" Tag="{Binding}" Style="{StaticResource PrimaryButton}" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
