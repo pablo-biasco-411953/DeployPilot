@@ -354,6 +354,34 @@ public sealed class ArtifactManifestService
     }
 }
 
+public sealed class ArtifactInstallPlanner
+{
+    public ArtifactInstallPlan CreatePlan(ArtifactRecord artifact, string artifactBaseUrl, string installRoot, string moduleName, string version)
+    {
+        var normalizedBaseUrl = artifactBaseUrl.EndsWith("/", StringComparison.Ordinal)
+            ? artifactBaseUrl
+            : $"{artifactBaseUrl}/";
+        if (!Uri.TryCreate(normalizedBaseUrl, UriKind.Absolute, out var baseUri))
+        {
+            throw new ArgumentException("Artifact base URL must be absolute.", nameof(artifactBaseUrl));
+        }
+
+        var artifactPath = artifact.RelativePath.Replace('\\', '/').TrimStart('/');
+        var artifactUri = new Uri(baseUri, $"artifacts/{Uri.EscapeDataString(artifactPath).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}");
+        var installPath = Path.Combine(installRoot, SanitizePathSegment(moduleName), version);
+        var stagingPath = Path.Combine(Path.GetTempPath(), "DeployPilot", "downloads", artifact.Id.ToString("N"), artifact.FileName);
+
+        return new ArtifactInstallPlan(artifactUri, stagingPath, installPath);
+    }
+
+    private static string SanitizePathSegment(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var sanitized = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray());
+        return string.IsNullOrWhiteSpace(sanitized) ? "module" : sanitized;
+    }
+}
+
 public sealed class IntegrityService
 {
     public async Task<bool> MatchesSha256Async(string filePath, string expectedSha256, CancellationToken cancellationToken = default)

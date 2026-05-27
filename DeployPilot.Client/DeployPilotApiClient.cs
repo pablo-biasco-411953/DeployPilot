@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Diagnostics;
 using DeployPilot.Shared;
 
 namespace DeployPilot.Client;
@@ -69,5 +70,41 @@ public sealed class DeployPilotApiClient(HttpClient httpClient)
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    public async Task DownloadArtifactAsync(
+        Uri artifactUri,
+        Stream destination,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await httpClient.GetAsync(artifactUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            throw new FileNotFoundException("Artifact was not found.", artifactUri.ToString());
+        }
+
+        response.EnsureSuccessStatusCode();
+        var totalBytes = response.Content.Headers.ContentLength;
+        await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        var buffer = new byte[64 * 1024];
+        var bytesReceived = 0L;
+        var stopwatch = Stopwatch.StartNew();
+
+        while (true)
+        {
+            var read = await source.ReadAsync(buffer, cancellationToken);
+            if (read == 0)
+            {
+                break;
+            }
+
+            await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            bytesReceived += read;
+
+            var seconds = Math.Max(stopwatch.Elapsed.TotalSeconds, 0.001);
+            progress?.Report(new DownloadProgress(bytesReceived, totalBytes, bytesReceived / seconds));
+        }
     }
 }

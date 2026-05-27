@@ -264,6 +264,31 @@ public class CoreBehaviorTests
     }
 
     [Fact]
+    public void ArtifactInstallPlannerBuildsDownloadAndInstallPaths()
+    {
+        var artifact = new ArtifactRecord(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "desktop.zip",
+            "demo/desktop.zip",
+            1024,
+            new string('a', 64),
+            DateTimeOffset.UtcNow);
+
+        var plan = new ArtifactInstallPlanner().CreatePlan(
+            artifact,
+            "http://localhost:5081",
+            "C:/DeployPilot/installed",
+            "Desktop Suite",
+            "1.2.3");
+
+        Assert.Equal("http://localhost:5081/artifacts/demo/desktop.zip", plan.ArtifactUri.ToString());
+        Assert.Contains("Desktop Suite", plan.InstallPath);
+        Assert.Contains("1.2.3", plan.InstallPath);
+        Assert.Contains(artifact.Id.ToString("N"), plan.StagingPath);
+    }
+
+    [Fact]
     public void ClientFactoryRejectsRelativeApiUrls()
     {
         var exception = Assert.Throws<ArgumentException>(() => DeployPilotClientFactory.Create("/api"));
