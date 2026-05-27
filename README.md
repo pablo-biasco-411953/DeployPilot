@@ -101,6 +101,10 @@ For a quick end-to-end demo, start the API, open the launcher, click `Seed demo 
 - Artifact signing.
 - Supabase starter guide.
 
+## Branching Model
+
+DeployPilot uses short-lived feature and hotfix branches. Feature branches introduce product capabilities, hotfix branches keep the repository healthy or fix narrow defects, and `main` receives reviewed merge commits so the public history stays readable.
+
 ## Documentation
 
 - [Architecture](docs/en/architecture.md)
